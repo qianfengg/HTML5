@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            /* iPhone6的375px尺寸作为16px基准，600px正好18px大小 */
+            font-size: calc(100% + 2 * (100vw - 375px) / 225);
+        }
+        @media screen and (min-width: 600px) {
+            html {
+                /* 600px-1000px每100像素宽字体增加1px(18px-22px) */
+                font-size: calc(112.5% + 4 * (100vw - 600px) / 400);
+            }
+        }
+        @media screen and (min-width: 1000px) {
+            html {
+                /* 1000px往后是每100像素0.5px增加 */
+                font-size: calc(137.5% + 5 * (100vw - 1000px) / 1000);
+            }
+        }
+        ul,li{
+            list-style: none;
+        }
+
+        body {
+            overflow: hidden;
+            background-color: #000;
+        }
+        ul{
+            display: flex;
+            position: absolute;
+            width: 15rem;
+            height: 2rem;
+            left: .1rem;
+            bottom: .1rem;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        ul > li{
+            width: 4rem;
+            height: 1rem;
+            border: .2rem solid #fff;
+            text-align: center;
+            line-height: 1rem;
+            font-size: .5rem;
+            cursor: pointer;
+            transition: .2s;
+            color: #0ab5e4;
+        }
+
+        ul > li:hover{
+            background-color: skyblue;
+            color: #fff;
+        }
+
+        ul > li.active{
+            background-color: skyblue;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+<ul>
+    <li data-type="0">中心扩散</li>
+    <li data-type="1">跟随鼠标</li>
+    <li data-type="2">绕中心旋转</li>
+</ul>
+<script>
+    (function () {
+
+        const {random, PI, sin, cos, min} = Math;
+
+        let randomColor = () => "#" + (random() * 0xffffff | 0).toString(16);
+
+        let deg2Rad = (deg) => deg * PI / 180;
+
+        let randomRange = (min, max) => random() * (max - min) + min;
+
+        const PARTICLE_R = 4,
+                SPEED = .4,
+                DELTA_R = 0.03;
+
+        let oCvs = document.getElementById("myCanvas"),
+            ctx = oCvs.getContext("2d"),
+            cW,
+            cH,
+            cR,
+            deg = 0;
+            particles = [],
+            pos = {x: 0, y: 0},
+            type = 0,
+            aLi = document.getElementsByTagName("li");
+
+        //按钮事件
+        [...aLi].forEach((item) => {
+            item.onclick = function(){
+                type = this.dataset.type;
+                setLiButton(type);
+            }
+        });
+
+        function resize() {
+            cW = oCvs.width = window.innerWidth;
+            cH = oCvs.height = window.innerHeight;
+            cR = min(cW, cH) / 2 * 0.8;
+            return resize;
+        }
+
+        window.addEventListener("resize", resize());
+
+        window.addEventListener("mousemove", function (e) {
+            // console.log(e.clientX, e.clientY);
+            pos.x = e.clientX;
+            pos.y = e.clientY;
+        });
+
+        class Particle {
+            constructor(x = W / 2, y = H / 2) {
+                this.color = randomColor();
+                this.x = x;
+                this.y = y;
+                this.r = PARTICLE_R;
+                this.vx = randomRange(-SPEED, SPEED);
+                this.vy = randomRange(-SPEED, SPEED);
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                ctx.arc(this.x, this.y, this.r, 0, deg2Rad(360));
+                ctx.fill();
+                this.update();
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.r -= DELTA_R;
+            }
+        }
+
+        function spawn() {
+            let [x, y] = [[cW / 2, cH / 2], [pos.x, pos.y], [cW / 2 + cR * cos(deg2Rad(deg)), cH / 2 + cR * sin(deg2Rad(deg))]][type];
+            let p = new Particle(x, y);
+            particles.push(p);
+        }
+
+        function render() {
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].draw();
+                particles[i].r < DELTA_R && particles.splice(i--, 1);
+            }
+        }
+
+        //设置类型
+        function setType(t = 0){
+            type = t;
+            setLiButton(type);
+        }
+
+        //选中按钮
+        function setLiButton(type){
+            [...aLi].forEach((item) => {
+                item.classList.remove("active");
+            });
+            aLi[type].classList.add("active");
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, cW, cH);
+            deg++;
+            spawn();
+            render();
+            requestAnimationFrame(loop);
+        }
+
+        return {
+            run(type) {
+                setType(type);
+                loop();
+            }
+        }
+    })().run(2);
+</script>
+</body>
+</html>
