@@ -30,8 +30,8 @@
 </head>
 <body>
 <script>
-    let canvas, ctx, w, h;
-    window.onload = () => {
+    (function(){
+        let canvas, ctx, w, h;
         let img = new Image();
         img.src = "images/timg (" + Math.floor(Math.random() * 14) + ").jpg";
         img.onload = () => {
@@ -71,19 +71,20 @@
                 }
             }
         }
-    }
 
-    function check() {
-        let data = ctx.getImageData(0, 0, w, h).data;
-        let n = 0;
-        for (let i = 0; i < data.length; i += 4) {
-            if (data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 0 && data[i + 3] == 0) {
-                n++;
+        function check() {
+            let data = ctx.getImageData(0, 0, w, h).data;
+            let n = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 0 && data[i + 3] == 0) {
+                    n++;
+                }
             }
+            let num = (n * 100 / (w * h)).toFixed(2);
+            document.title = "已刮开的面积为" + num + "%";
         }
-        let num = (n * 100 / (w * h)).toFixed(2);
-        document.title = "已刮开的面积为" + num + "%";
-    }
+    })();
+
 </script>
 </body>
 </html>
