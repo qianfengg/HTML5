@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body, html {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: url("img/bg.jpg") no-repeat center/cover;
+        }
+
+        canvas {
+            margin: auto;
+            /*box-shadow: 0 0 5px blue;*/
+        }
+    </style>
+</head>
+<body>
+<canvas width="500" height="500"></canvas>
+<script>
+    let canvas = document.querySelector("canvas"),
+        ctx = canvas.getContext("2d"),
+        w = canvas.width,
+        h = canvas.height,
+        r = w / 2,
+        secShadow = 0;
+
+    ctx.translate(r, r);
+    let img = new Image();
+    img.src = "img/bird.jpg";
+    img.onload = function () {
+        drawBg();
+    }
+
+    let audio = new Audio()
+    audio.src = "music/second.mp3";
+
+    function drawBg() {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.drawImage(img, -r, -r, w, h);
+        ctx.closePath();
+        ctx.restore();
+
+        drawNum();
+    }
+
+    function drawNum() {
+        ctx.save();
+        ctx.font = "25px 微软雅黑";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.beginPath();
+        for (let i = 1; i <= 12; i++) {
+            let t = -0.9 * r * Math.cos(i * 30 * Math.PI / 180);
+            let l = 0.9 * r * Math.sin(i * 30 * Math.PI / 180);
+            ctx.fillText(i, l, t);
+        }
+        ctx.closePath();
+        ctx.restore();
+
+        drawDot()
+    }
+
+    function drawDot() {
+        ctx.save();
+        for (let i = 0; i < 60; i++) {
+            if (i % 5 != 0) {
+                if (i == secShadow) {
+                    ctx.fillStyle = "gold";
+                } else {
+                    ctx.fillStyle = "black";
+                }
+                let t = -0.9 * r * Math.cos(i * 6 * Math.PI / 180);
+                let l = 0.9 * r * Math.sin(i * 6 * Math.PI / 180);
+                ctx.beginPath();
+                ctx.arc(l, t, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        ctx.closePath();
+        ctx.restore();
+        //drawHour(8,30)
+    }
+
+    function drawHour(hour, min) {
+        ctx.save();
+        ctx.lineWidth = 20;
+        ctx.lineCap = "round";
+        let rot_hour = Math.PI / 180 * 30 * hour;
+        let rot_min = Math.PI / 180 * 30 / 60 * min;
+        ctx.rotate(rot_hour + rot_min);
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.lineTo(0, -80);
+        ctx.stroke();
+        ctx.closePath();
+        ctx.restore();
+
+        //drawMin(10,60);
+    }
+
+    function drawMin(min, sec) {
+        ctx.save();
+        ctx.lineWith = 15;
+        ctx.fillStyle = "gold";
+        let rot_min = Math.PI / 180 * 6 * min;
+        let rot_sec = Math.PI / 180 * 6 / 60 * sec;
+        ctx.rotate(rot_min + rot_sec);
+        ctx.beginPath();
+        ctx.moveTo(0, -150);
+        ctx.lineTo(-10, 15);
+        ctx.lineTo(10, 15);
+        ctx.fill();
+        ctx.closePath();
+        ctx.restore();
+
+        //drawSec(50);
+    }
+
+    function drawSec(sec) {
+        // audio.play();
+        ctx.save();
+        ctx.lineWith = 10;
+        ctx.fillStyle = "red";
+        let rot_sec = Math.PI / 180 * 6 * sec;
+        ctx.rotate(rot_sec);
+        ctx.beginPath();
+        ctx.moveTo(0, -200);
+        ctx.lineTo(-5, 15);
+        ctx.lineTo(5, 15);
+        ctx.fill();
+        ctx.closePath();
+        ctx.restore();
+
+        drawEyes(sec)
+    }
+
+    function drawEyes(sec) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        let rad = Math.PI / 180 * 6 * sec;
+        ctx.beginPath();
+
+        var x1 = -40;
+        var y1 = -51;
+        var r1 = 12;
+
+        var x2 = 37;
+        var y2 = -51;
+        var r2 = 14;
+
+        ctx.arc(x1 + 9 * Math.sin(rad), y1 - 9 * Math.cos(rad), r1, 0, 2 * Math.PI);
+        ctx.arc(x2 + 12 * Math.sin(rad), y2 - 12 * Math.cos(rad), r2, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.closePath();
+        ctx.restore();
+    }
+
+    ~function () {
+        let date = new Date();
+        let hour = date.getHours();
+        let min = date.getMinutes();
+        let sec = date.getSeconds();
+        secShadow = sec;
+        drawBg();
+        drawHour(hour, min);
+        drawMin(min, sec);
+        drawSec(sec);
+        requestAnimationFrame(arguments.callee);
+    }()
+</script>
+</body>
+</html>
