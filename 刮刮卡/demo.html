@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" onselectstart="return false;">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body, html {
+            height: 100%;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        body img {
+            width: 100%;
+            height: 100%;
+        }
+
+        body canvas {
+            position: absolute;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<script>
+    let canvas, ctx, w, h;
+    window.onload = () => {
+        let img = new Image();
+        img.src = "images/timg (" + Math.floor(Math.random() * 14) + ").jpg";
+        img.onload = () => {
+            document.body.appendChild(img);
+            canvas = document.createElement("canvas");
+            canvas.setAttribute("draggable", false);
+            ctx = canvas.getContext("2d");
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            document.body.insertBefore(canvas, img);
+            ctx.fillStyle = "#bbb";
+            ctx.fillRect(0, 0, w, h);
+
+            canvas.onmousedown = (e) => {
+                let x = e.clientX;
+                let y = e.clientY;
+                ctx.globalCompositeOperation = "destination-out";
+                ctx.beginPath();
+                ctx.arc(x, y, 50, 0, 2 * Math.PI);
+                ctx.fill();
+
+                document.onmousemove = (e) => {
+                    ctx.lineWidth = 100;
+                    ctx.lineCap = "round";
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(e.clientX, e.clientY);
+                    ctx.stroke();
+
+                    x = e.clientX;
+                    y = e.clientY;
+                    check();
+                }
+
+                document.onmouseup = () => {
+                    document.onmousemove = document.onmouseup = null;
+                }
+            }
+        }
+    }
+
+    function check() {
+        let data = ctx.getImageData(0, 0, w, h).data;
+        let n = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 0 && data[i + 3] == 0) {
+                n++;
+            }
+        }
+        let num = (n * 100 / (w * h)).toFixed(2);
+        document.title = "已刮开的面积为" + num + "%";
+    }
+</script>
+</body>
+</html>
