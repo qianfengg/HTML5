@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+        }
+        body{
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script>
+        let app = (function(){
+
+            let canvas = document.getElementById("myCanvas"),
+                ctx = canvas.getContext("2d"),
+                cW,
+                cH,
+                hue = 230,
+                moverange = 2,
+                starradius = 60,
+                speed = 50000,
+                tail = 0.5,
+                length = 1000,
+                stars = [],
+                canvas2 = null,
+                ctx2 = null;
+
+            let random = (min, max) => {
+                if(max == undefined){
+                    max = min;
+                    min = 0;
+                }
+                if(min > max){
+                    [min, max] = [max, min];
+                }
+                return Math.random() * (max - min + 1) + min | 0;
+            }
+
+            let maxOrbit = (x, y) => {
+                let max = Math.max(x, y);
+                let d = Math.round(Math.hypot(max, max));
+                return d / moverange;
+            }
+
+            function init(){
+                window.addEventListener("resize", resizeHandle());
+                canvas2 = document.createElement("canvas");
+                ctx2 = canvas2.getContext("2d");
+                canvas2.width = 100;
+                canvas2.height = 100;
+                let half = canvas2.width / 2;
+                let rg = ctx2.createRadialGradient(half, half, 0, half, half, half);
+                rg.addColorStop(0.025, "#ccc");
+                rg.addColorStop(0.1, `hsl(${hue}, 60%, 30%)`);
+                rg.addColorStop(0.25, `hsl(${hue}, 65%, 5%)`);
+                rg.addColorStop(1, "transparent");
+                ctx2.beginPath();
+                ctx2.fillStyle = rg;
+                ctx2.arc(half, half, half, 0, 2 * Math.PI);
+                ctx2.fill();
+
+                // ctx.drawImage(canvas2, 0, 0, half, half);  调试离屏canvas
+                // console.log(random(30, 20)); 调试随机数函数
+                // console.log(maxOrbit(cW, cH)); 调试最大轨迹半径
+                // console.log(new Star()); 调试star实例
+            }
+
+            function resizeHandle(){
+                cW = canvas.width = window.innerWidth;
+                cH = canvas.height = window.innerHeight;
+                ctx.translate(cW / 2, cH / 2);
+                return resizeHandle;
+            }
+
+            class Star{
+                constructor(){
+                    this.orbitRadius = random(maxOrbit(cW, cH));
+                    this.radius = random(starradius, this.orbitRadius) / 8;
+                    this.timeSpeed = random(length);
+                    this.speed = random(this.orbitRadius) / speed;
+                }
+
+                draw(){
+                    let x = Math.cos(this.timeSpeed) * this.orbitRadius;
+                    let y = Math.sin(this.timeSpeed) * this.orbitRadius;
+
+                    ctx.drawImage(canvas2, x - this.radius / 2, y - this.radius / 2, this.radius, this.radius);
+                }
+
+                update(){
+                    this.timeSpeed += this.speed;
+                }
+            }
+
+            function spawn(){
+                for (let i = 0; i < length; i++) {
+                    stars.push(new Star());
+                }
+            }
+
+            function loop(){
+                ctx.globalCompositeOperation = "source-over";
+                ctx.globalAlpha = tail;
+                ctx.fillStyle = `hsl(${hue}, 65%, 5%)`;
+                ctx.fillRect(-cW / 2, -cH / 2, cW, cH);
+                for (let i = 0; i < length; i++) {
+                    stars[i].draw();
+                    stars[i].update();
+                }
+                requestAnimationFrame(loop);
+            }
+
+            return {
+                run(){
+                    init();
+                    spawn();
+                    loop();
+                }
+            }
+        })().run();
+
+    </script>
+</body>
+</html>
