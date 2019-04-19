@@ -101,7 +101,7 @@
 
             function spawn(){
                 for (let i = 0; i < length; i++) {
-                    ubdex.push(new Star());
+                    stars.push(new Star());
                 }
             }
 
@@ -111,8 +111,8 @@
                 ctx.fillStyle = `hsl(${hue}, 65%, 5%)`;
                 ctx.fillRect(-cW / 2, -cH / 2, cW, cH);
                 for (let i = 0; i < length; i++) {
-                    ubdex[i].draw();
-                    ubdex[i].update();
+                    stars[i].draw();
+                    stars[i].update();
                 }
                 requestAnimationFrame(loop);
             }
