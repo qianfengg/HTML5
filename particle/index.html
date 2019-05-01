@@ -76,7 +76,7 @@
 <canvas id="myCanvas"></canvas>
 <ul>
     <li data-type="0">中心扩散</li>
-    <li data-type="1">跟随鼠标</li>
+    <li data-type="1">跟随鼠标/手指</li>
     <li data-type="2">绕中心旋转</li>
     <li data-type="3">粒子喷泉</li>
     <li data-type="4">粒子浮动</li>
@@ -87,7 +87,7 @@
      */
     const TYPE = {
         CENTRAL_DIFFUSION: 0, //中心扩散
-        FOLLOW_MOUSE: 1, //跟随鼠标
+        FOLLOW: 1, //跟随
         REVOLVING_AROUND_CENTER: 2, //绕中心旋转
         PARTICLE_FOUNTAIN: 3, //粒子喷泉
         PARTICLE_FLOAT: 4, //粒子浮动
@@ -155,11 +155,13 @@
         /**
          * 鼠标移动事件
          */
-        window.addEventListener("mousemove", function (e) {
-            // console.log(e.clientX, e.clientY);
+        function move(e){
             pos.x = e.clientX;
             pos.y = e.clientY;
-        });
+        }
+
+        window.addEventListener("mousemove", move);
+        window.addEventListener("touchmove", move);
 
         /**
          * 粒子实体类
@@ -170,7 +172,7 @@
              * @param x 粒子初始x坐标
              * @param y 粒子初始y坐标
              */
-            constructor(x = W / 2, y = H / 2) {
+            constructor(x = cW / 2, y = cH / 2) {
                 this.color = randomColor();
                 this.x = x;
                 this.y = y;
