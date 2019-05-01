@@ -14,19 +14,22 @@
             /* iPhone6的375px尺寸作为16px基准，600px正好18px大小 */
             font-size: calc(100% + 2 * (100vw - 375px) / 225);
         }
+
         @media screen and (min-width: 600px) {
             html {
                 /* 600px-1000px每100像素宽字体增加1px(18px-22px) */
                 font-size: calc(112.5% + 4 * (100vw - 600px) / 400);
             }
         }
+
         @media screen and (min-width: 1000px) {
             html {
                 /* 1000px往后是每100像素0.5px增加 */
                 font-size: calc(137.5% + 5 * (100vw - 1000px) / 1000);
             }
         }
-        ul,li{
+
+        ul, li {
             list-style: none;
         }
 
@@ -34,10 +37,11 @@
             overflow: hidden;
             background-color: #000;
         }
-        ul{
+
+        ul {
             display: flex;
             position: absolute;
-            width: 15rem;
+            width: 30rem;
             height: 2rem;
             left: .1rem;
             bottom: .1rem;
@@ -45,7 +49,7 @@
             align-items: center;
         }
 
-        ul > li{
+        ul > li {
             width: 4rem;
             height: 1rem;
             border: .2rem solid #fff;
@@ -57,12 +61,12 @@
             color: #0ab5e4;
         }
 
-        ul > li:hover{
+        ul > li:hover {
             background-color: skyblue;
             color: #fff;
         }
 
-        ul > li.active{
+        ul > li.active {
             background-color: skyblue;
             color: #fff;
         }
@@ -74,21 +78,46 @@
     <li data-type="0">中心扩散</li>
     <li data-type="1">跟随鼠标</li>
     <li data-type="2">绕中心旋转</li>
+    <li data-type="3">粒子喷泉</li>
+    <li data-type="4">粒子浮动</li>
 </ul>
 <script>
+    /**
+     * 所有类型常量
+     */
+    const TYPE = {
+        CENTRAL_DIFFUSION: 0, //中心扩散
+        FOLLOW_MOUSE: 1, //跟随鼠标
+        REVOLVING_AROUND_CENTER: 2, //绕中心旋转
+        PARTICLE_FOUNTAIN: 3, //粒子喷泉
+        PARTICLE_FLOAT: 4, //粒子浮动
+    };
+
     (function () {
 
+        /**
+         * 解构Math的方法
+         */
         const {random, PI, sin, cos, min} = Math;
 
+        /**
+         * 随机颜色
+         */
         let randomColor = () => "#" + (random() * 0xffffff | 0).toString(16);
 
+        /**
+         * 角度制转换为弧度制
+         */
         let deg2Rad = (deg) => deg * PI / 180;
 
+        /**
+         * 随机范围
+         */
         let randomRange = (min, max) => random() * (max - min) + min;
 
-        const PARTICLE_R = 4,
-                SPEED = .4,
-                DELTA_R = 0.03;
+        const PARTICLE_R = 4, //粒子半径
+                SPEED = .4, //粒子速度
+                DELTA_R = 0.03; //减小半径
 
         let oCvs = document.getElementById("myCanvas"),
             ctx = oCvs.getContext("2d"),
@@ -101,14 +130,19 @@
             type = 0,
             aLi = document.getElementsByTagName("li");
 
-        //按钮事件
+        /**
+         * 按钮事件
+         */
         [...aLi].forEach((item) => {
-            item.onclick = function(){
+            item.onclick = function () {
                 type = this.dataset.type;
                 setLiButton(type);
             }
         });
 
+        /**
+         * 改变窗口大小方法
+         */
         function resize() {
             cW = oCvs.width = window.innerWidth;
             cH = oCvs.height = window.innerHeight;
@@ -118,22 +152,36 @@
 
         window.addEventListener("resize", resize());
 
+        /**
+         * 鼠标移动事件
+         */
         window.addEventListener("mousemove", function (e) {
             // console.log(e.clientX, e.clientY);
             pos.x = e.clientX;
             pos.y = e.clientY;
         });
 
+        /**
+         * 粒子实体类
+         */
         class Particle {
+            /**
+             * 构造函数 不传默认为画布中心
+             * @param x 粒子初始x坐标
+             * @param y 粒子初始y坐标
+             */
             constructor(x = W / 2, y = H / 2) {
                 this.color = randomColor();
                 this.x = x;
                 this.y = y;
                 this.r = PARTICLE_R;
-                this.vx = randomRange(-SPEED, SPEED);
-                this.vy = randomRange(-SPEED, SPEED);
+                this.vx = [3 * randomRange(-SPEED, SPEED), randomRange(-SPEED, SPEED), randomRange(-SPEED, SPEED), 1.5 * randomRange(-SPEED, SPEED), randomRange(-SPEED, SPEED)][type];
+                this.vy = [3 * randomRange(-SPEED, SPEED), randomRange(-SPEED, SPEED), randomRange(-SPEED, SPEED), randomRange(-5 * SPEED, -4 * SPEED), randomRange(-5 * SPEED, -4 * SPEED)][type];
             }
 
+            /**
+             * 绘制粒子
+             */
             draw() {
                 ctx.beginPath();
                 ctx.fillStyle = this.color;
@@ -142,6 +190,9 @@
                 this.update();
             }
 
+            /**
+             * 更新粒子坐标及半径
+             */
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
@@ -149,12 +200,18 @@
             }
         }
 
+        /**
+         * 生成粒子方法
+         */
         function spawn() {
-            let [x, y] = [[cW / 2, cH / 2], [pos.x, pos.y], [cW / 2 + cR * cos(deg2Rad(deg)), cH / 2 + cR * sin(deg2Rad(deg))]][type];
+            let [x, y] = [[cW / 2, cH / 2], [pos.x, pos.y], [cW / 2 + cR * cos(deg2Rad(deg)), cH / 2 + cR * sin(deg2Rad(deg))], [cW / 2, cH], [randomRange(0, cW), cH]][type];
             let p = new Particle(x, y);
             particles.push(p);
         }
 
+        /**
+         * 渲染
+         */
         function render() {
             for (let i = 0; i < particles.length; i++) {
                 particles[i].draw();
@@ -162,20 +219,29 @@
             }
         }
 
-        //设置类型
-        function setType(t = 0){
+        /**
+         * 设置类型
+         * @param t 0~4 对应不同类型
+         */
+        function setType(t = 0) {
             type = t;
             setLiButton(type);
         }
 
-        //选中按钮
-        function setLiButton(type){
+        /**
+         * 选中按钮
+         * @param type 0~4 对应不同类型
+         */
+        function setLiButton(type) {
             [...aLi].forEach((item) => {
                 item.classList.remove("active");
             });
             aLi[type].classList.add("active");
         }
 
+        /**
+         * 心跳 主旋律方法
+         */
         function loop() {
             ctx.clearRect(0, 0, cW, cH);
             deg++;
@@ -190,7 +256,7 @@
                 loop();
             }
         }
-    })().run(2);
+    })().run(TYPE.PARTICLE_FLOAT);
 </script>
 </body>
 </html>
