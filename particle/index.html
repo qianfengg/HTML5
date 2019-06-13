@@ -157,8 +157,8 @@
          * 鼠标移动事件
          */
         function move(e){
-            pos.x = e.clientX;
-            pos.y = e.clientY;
+            pos.x = e.clientX || e.touches[0].pageX;
+            pos.y = e.clientY || e.touches[0].pageY;
         }
 
         window.addEventListener("mousemove", move);
